@@ -48,40 +48,44 @@ func findErrorCodes() map[string]string {
 		case *ast.GenDecl:
 			// iterate over Specs, which are declarations
 			for _, spec := range decl.Specs {
-				switch spec := spec.(type) {
-				// we're interested in ValueSpec nodes (represent constant or variable declaration)
-				case *ast.ValueSpec:
-					// checking if the node is a composite literal of type AppError (AppError{...})
-					if len(spec.Values) == 1 && spec.Values[0].(*ast.CompositeLit).Type.(*ast.Ident).Name == "AppError" {
-						var code string
-						var message string
-
-						// iterate over this composite literal elements (the struct fields: message, code, statusCode)
-						for _, el := range spec.Values[0].(*ast.CompositeLit).Elts {
-							kv, ok := el.(*ast.KeyValueExpr)
-							if !ok {
-								continue
-							}
-							// extract field name
-							key := kv.Key.(*ast.Ident).Name
-
-							// extract the value for code and message
-							switch key {
-							case "code":
-								code = kv.Value.(*ast.BasicLit).Value
-							case "message":
-								message = kv.Value.(*ast.BasicLit).Value
-							}
-						}
-
-						errs[code] = message
-					}
-				}
+				analyzeSpec(spec, errs)
 			}
 		}
 	}
 
 	return errs
+}
+
+func analyzeSpec(spec ast.Spec, errs map[string]string) {
+	switch spec := spec.(type) {
+	// we're interested in ValueSpec nodes (represent constant or variable declaration)
+	case *ast.ValueSpec:
+		// checking if the node is a composite literal of type AppError (AppError{...})
+		if len(spec.Values) == 1 && spec.Values[0].(*ast.CompositeLit).Type.(*ast.Ident).Name == "AppError" {
+			var code string
+			var message string
+
+			// iterate over this composite literal elements (the struct fields: message, code, statusCode)
+			for _, el := range spec.Values[0].(*ast.CompositeLit).Elts {
+				kv, ok := el.(*ast.KeyValueExpr)
+				if !ok {
+					continue
+				}
+				// extract field name
+				key := kv.Key.(*ast.Ident).Name
+
+				// extract the value for code and message
+				switch key {
+				case "code":
+					code = kv.Value.(*ast.BasicLit).Value
+				case "message":
+					message = kv.Value.(*ast.BasicLit).Value
+				}
+			}
+
+			errs[code] = message
+		}
+	}
 }
 
 func stripQuotes(s string) string {
