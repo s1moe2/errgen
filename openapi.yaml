@@ -1,0 +1,48 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Sample API
+  description: |
+    ## API for Things and Stuff
+
+    ### Errors (4xx-500 range status codes)
+    Error responses also always follow their own structure, exposing a message and a code.
+    The message is simply indicative and most likely more relevant for development than for end users.
+    Codes are more appropriate for client applications to implement error handling and error message translations.
+    
+    ```
+    {
+      "message": "The request route does not exist",
+      "code": "route_not_found"
+    }
+    ```
+    
+    #### Error codes
+    <!-- Do not remove ERROR_GENERATOR_START and ERROR_GENERATOR_END comments! -->
+    <!-- These are used by errorgen to generate the error codes from the code. -->
+    <!-- ERROR_GENERATOR_START -->
+
+    `internal_error`: Unexpected server error
+
+    `invalid_payload`: Request payload could not be parsed correctly
+
+    `invalid_query_param`: One of the query parameters is not valid
+
+    `method_not_allowed`: The request HTTP method is not allowed in this server
+
+    `payload_parse`: Request body payload could not be parsed
+
+    `payload_size`: Request body payload exceeds the maximum of bytes allowed
+
+    `route_not_found`: The request route does not exist
+    <!-- ERROR_GENERATOR_END -->
+
+paths:
+  /:
+    get:
+      summary: 'API info'
+      operationId: apiRoot
+      responses:
+        '204':
+          description: 'No Content'
+        '400':
