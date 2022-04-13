@@ -62,30 +62,35 @@ func analyzeSpec(spec ast.Spec, errs map[string]string) {
 	case *ast.ValueSpec:
 		// checking if the node is a composite literal of type AppError (AppError{...})
 		if len(spec.Values) == 1 && spec.Values[0].(*ast.CompositeLit).Type.(*ast.Ident).Name == "AppError" {
-			var code string
-			var message string
-
-			// iterate over this composite literal elements (the struct fields: message, code, statusCode)
-			for _, el := range spec.Values[0].(*ast.CompositeLit).Elts {
-				kv, ok := el.(*ast.KeyValueExpr)
-				if !ok {
-					continue
-				}
-				// extract field name
-				key := kv.Key.(*ast.Ident).Name
-
-				// extract the value for code and message
-				switch key {
-				case "code":
-					code = kv.Value.(*ast.BasicLit).Value
-				case "message":
-					message = kv.Value.(*ast.BasicLit).Value
-				}
-			}
-
+			code, message := extractFields(spec.Values[0].(*ast.CompositeLit).Elts)
 			errs[code] = message
 		}
 	}
+}
+
+func extractFields(elts []ast.Expr) (string, string) {
+	var code string
+	var message string
+
+	// iterate over this composite literal elements (the struct fields: message, code, statusCode)
+	for _, el := range elts {
+		kv, ok := el.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+		// extract field name
+		key := kv.Key.(*ast.Ident).Name
+
+		// extract the value for code and message
+		switch key {
+		case "code":
+			code = kv.Value.(*ast.BasicLit).Value
+		case "message":
+			message = kv.Value.(*ast.BasicLit).Value
+		}
+	}
+
+	return code, message
 }
 
 func stripQuotes(s string) string {
